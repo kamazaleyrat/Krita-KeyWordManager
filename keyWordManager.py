@@ -20,10 +20,14 @@ doc = Krita.instance().activeDocument() #ID document
 exportStyle = ('iterate','hide','full','moreIterate')
 EXPORT_FOLDER  = str(os.path.dirname(doc.fileName())+"\\export\\")
 
-def infoBox(message):
+def infoBox(*message):
         infoBox = QMessageBox()
         infoBox.setWindowTitle('info : ')
-        infoBox.setText(str(message))
+        thisText=str()
+        if type(message) is list :
+            thisText.join(mot)
+        else : thisText += str(message)
+        infoBox.setText(thisText)
         infoBox.exec_()
 
 def getKeyWordedLayers():
@@ -65,7 +69,7 @@ def getDocumentKeyWords():
     for node in getKeyWordedLayers():
         thisWordList = separateKeyWords(node)
         for word in thisWordList :
-            if word not in newList and OFFWORD not in word : newList.append(word)
+            if word not in newList and word is not OFFWORD : newList.append(word)
 
     docKeyWordList = newList
     docKeyWordList.sort()
@@ -123,7 +127,7 @@ class WordList():
         nodeList = []
         for word in self.content :
             thoseNodes = [node for node in word.nodes if node not in nodeList]
-            nodeList.extend(thosesNodes)
+            nodeList.extend(thoseNodes)
         return nodeList
         
     def getThisMot(self,*name):
@@ -132,21 +136,24 @@ class WordList():
                 if mot.name == name[i] :  return mot
 
     def addWord(self,word): #add 'Mot' object in the List object from a string 'name'
-
+        print('adding '+word)
         if type(word) is str and word not in self.getAllWords() :
             self.content.append(Mot(word))
+
         elif type(word) is Mot and word not in self.content :
             self.content.append(word)
         else :
-           infoBox('Ce mot clef éxiste déjà ! ')
+           print('This word is aleady in the list')
+
         this = self.content[-1]
         this.nodes = [node for node in getLayersOf(this.name)]
         return this
 
     def setlist(self,thisList):
+        print('seting List')
         #infoBox('setup to 0')
         for word in thisList :
-            self.addWord(word)
+                self.addWord(word)
         return True
     
 class keyWordWidget() :
@@ -162,13 +169,12 @@ class keyWordWidget() :
         self.parent.refreshList()
 
     def refresh(self):
-        self.mot.isVisible = self.box.isChecked()
+        self.mot.isVisible = self.box.isChecked() 
         self.nameLabel.setText(self.mot.name)
         self.editLine.setText(self.mot.name)
 
-    def setWord(self,mot,visible = None ,*nodes):
+    def setWord(self,mot,*nodes):
         self.mot = mot
-        if visible is not None : self.mot.visible = visible
         self.mot.nodes.extend(nodes)
         self.refresh()
 
@@ -196,7 +202,8 @@ class keyWordWidget() :
    
     def toggleVisible(self): #rend visible ou invisible les calques avec le mot clef selon l'etat de la checkBox
         #infoBox('toggled')
-        for layer in mot.nodes :
+        for layer in self.mot.nodes :
+            #infoBox(self.mot.nodes[0])
             layer.setVisible(self.mot.isVisible)
 
         Krita.instance().activeDocument().refreshProjection()
@@ -262,9 +269,9 @@ class keyWordWidget() :
         self.simple.setLayout(simplelayout)
 
     def __str__(self):
-        return f"{self.name}+ state : + {self.box.isChecked()}"
+        return str(self.mot.name)
 
-class HardWordWidget(keyWordWidget) : #keyWordWidget who can't be modified
+class HardWordWidget(keyWordWidget) : #keyWordWidget who can't be modified = jls_extract_def()
     def __init__(self,mot,parent):
         keyWordWidget.__init__(self,mot,parent)
         super().__init__(mot,parent)
@@ -450,34 +457,52 @@ class ExportBox():
 
 class LayerBox():
 
-    def simple_refreshView(self) :
-        for widgets in self.WordWidgetList :
-            widgets.toggleVisible()
-    
     def refreshView(self):
 
-        #infoBox('refresh')
-        visiblesKeyWords = [word.name for word in self.wordList.content if word.isVisible == True]
-        hideKeyWords = [word.name for word in self.wordList.content if word.isVisible == False]
-        hideKeyWords.append(OFFWORD)
-        #activeList = [keyWord for keyWord in self.WordWidgetList if keyWord.isActive() == True]
-        #onList = [keyWord for keyWord in activeList if keyWord.box.isChecked() == True]
+        showWord = [word for word in self.wordList.content if word.isVisible == True]
+        showNodes = []
 
-        #activeNames = activeList.name()
-        listOfNodeOn = getLayersOf(*visiblesKeyWords)
-
-        for node in getKeyWordedLayers():
-            if node in listOfNodeOn :
+        for word in showWord :
+            newNode = [node for node in word.nodes if node not in showNodes]
+            if newNode :
+                 showNodes.extend(newNode)
+        
+        for node in self.wordList.getAllNodes():
+            if node in showNodes:
                 node.setVisible(True)
-            else :
-                node.setVisible(False)
-            Krita.instance().activeDocument().refreshProjection()
-            Krita.instance().activeDocument().setModified(True)
+            else : node.setVisible(False)
 
-    def refreshList(self,view = False):
+        Krita.instance().activeDocument().refreshProjection()
+        Krita.instance().activeDocument().setModified(True)
+    
+    def refreshList(self, view = False) :
+
+        
+        try : self.wordList.setlist(getDocumentKeyWords())
+        
+        except :
+            print('not setting list now')
+            pass
+
+        for word in self.wordList.content :
+            thisWidget = self.getWidgetOf(word,self.WordWidgetList)
+            if not thisWidget and word.name is not OFFWORD:
+                self.addKeyWordWidget(word)
+
+            elif thisWidget and thisWidget.widget.isVisible == False :
+                thisWidget.widget.setVisible(True)
+            else : continue
+        if view :
+            self.refreshView()
+
+        #liste des mots dans la liste
+        #liste des mots des widget
+        #
+                
+    def old_refreshList(self,view = False):
         #infoBox('refreshing')
         print("refreshing...")
-     
+
         # get the '//keyword' in document layers (if ther is document)
         
         try : self.wordList.setlist(getDocumentKeyWords())
@@ -493,32 +518,59 @@ class LayerBox():
                 self.addKeyWordWidget(self.wordList.content[A+i])
 
         #To refresh : hide all then show how much it's needed and write the good name on them
-        for wordWidget in self.WordWidgetList :
-            wordWidget.widget.setVisible(False)
+        alreadyNamedWidget = [widget for widget in self.WordWidgetList if widget.mot in self.wordList.content]
+        for wordWidget in alreadyNamedWidget :
+            wordWidget.widget.setVisible(True)
 
-        for i in range(len(docKeyWordList)) :
+
+        for wordWidget in self.WordWidgetList :
+            pass
+
+        for i in range(len(self.wordList.content)) :
             #infoBox(self.wordList.content[i])
+            
             self.WordWidgetList[i].widget.setVisible(True)
-            self.WordWidgetList[i].setWord(self.wordList.content[i])
+            self.WordWidgetList[i].setWord(self.wordList.content[i],getLayersOf(self.wordList.content[i].name))
         print('refresh List is ok')
         
-        if view == True : self.refreshView()
-        print('Refreshing View is Ok')
+        if view == True : 
+            self.refreshView()
+            print('Refreshing View is Ok')
+
         return True
-   
+    
+    def getWidgetsWords(self, widgetList) :
+        widgetsWords = list() 
+        for widget in widgetList :
+            widgetsWords.append(widget.mot)
+        return widgetsWords
+    
+    def getWidgetOf(self,*words, wordIn = True):
+        thosesWidgets = []
+        restWidgets = []
+        for widget in self.WordWidgetList :
+            if widget.mot in words and widget not in thosesWidgets:
+                thosesWidgets.append(widget)
+            else : restWidgets.append(widget)
+
+        if not thosesWidgets :
+            return False 
+        elif wordIn == False : return restWidgets
+        else : return thosesWidgets
+
     def __init__(self):
        
         super().__init__()
         self.WordWidgetList = [] # objects list for keyWordWidgets widget
         self.wordList = WordList() # object for listing words
-
+       
         # Main Windows Layout
         self.mainWidget = QWidget()
         layoutWindow = QVBoxLayout()
         #title
         label = QLabel("Mots clefs :")
         layoutWindow.addWidget(label)
-
+        
         #key Word List Layout
         self.ListWidget = QGroupBox()
         self.ListLayout = QVBoxLayout()
@@ -527,10 +579,11 @@ class LayerBox():
         self.mainWidget.setLayout(layoutWindow)
 
         # ligne pour le mot 'off' (calques ignorés à l'export)
-        self.wordList.addWord('off')
-        self.offKey  = HardWordWidget(self.wordList.getThisMot('off'),self)
+        offWord = self.wordList.addWord('off')
+        self.offKey  = HardWordWidget(offWord,self)
         self.offKey.box.setToolTip("'/Off' layers will be automatically hided at the export")
         layoutWindow.addWidget(self.offKey.widget)
+        
         # Ligne nouveaux motClef
         newKeyLine = QLineEdit()
         newKeyLine.setText("motClef")
@@ -547,7 +600,8 @@ class LayerBox():
         newKeyLine.textChanged.connect(lambda :newKeyLine.setFocus(False) )
 
         self.refreshList()
-          
+        
+
     def soloVisible(self,this,wordWidget):
         
         self.offKey.box.setChecked(False)
@@ -582,7 +636,7 @@ class LayerBox():
         radio.clicked.connect(lambda : self.soloVisible(radio,thisWidget))
         self.ListLayout.addLayout(thisLayout)
         #self.refreshList()
-        return self.WordWidgetList[-1]
+        return thisWidget
    
 class KeyWordDocker(DockWidget):
 
