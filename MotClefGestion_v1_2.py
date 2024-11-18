@@ -119,6 +119,13 @@ class WordList():
             thisListe.append(mot.name)
         return thisListe
     
+    def getAllNodes(self) :
+        nodeList = []
+        for word in self.content :
+            thoseNodes = [node for node in word.nodes if node not in nodeList]
+            nodeList.extend(thosesNodes)
+        return nodeList
+        
     def getThisMot(self,*name):
         for i in range(len(name)) :    
             for mot in self.content :
@@ -132,7 +139,9 @@ class WordList():
             self.content.append(word)
         else :
            infoBox('Ce mot clef éxiste déjà ! ')
-        return self.content[-1]
+        this = self.content[-1]
+        this.nodes = [node for node in getLayersOf(this.name)]
+        return this
 
     def setlist(self,thisList):
         #infoBox('setup to 0')
@@ -157,21 +166,20 @@ class keyWordWidget() :
         self.nameLabel.setText(self.mot.name)
         self.editLine.setText(self.mot.name)
 
-    def setWord(self,mot):
+    def setWord(self,mot,visible = None ,*nodes):
         self.mot = mot
+        if visible is not None : self.mot.visible = visible
+        self.mot.nodes.extend(nodes)
         self.refresh()
-
-    def isActive(self): #vérifie si le widget est visible
-        return self.widget.isVisible()
 
     def addWordToNode(self): #ajouter le mot clef aux calques selectionnés
         newName = SEPARATOR+self.mot.name
         for node in getSelectedNodes():
-            self.mot.nodes.append(node)
             if newName not in node.name():
                 name = node.name()
                 name+=newName
                 node.setName(name)
+            self.mot.nodes.append(node)
                 #infoBox('add in progress')
         self.parent.refreshList()
 
@@ -182,7 +190,7 @@ class keyWordWidget() :
                 name = node.name().replace(keyName,'')
                 node.setName(name) #enlever le mot clef aux calques selectionnés
             if node in self.mot.nodes :
-                self.mot.node.pop(node)
+                self.mot.nodes.remove(node)
 
         self.parent.refreshList()
    
@@ -471,12 +479,13 @@ class LayerBox():
         print("refreshing...")
      
         # get the '//keyword' in document layers (if ther is document)
+        
         try : self.wordList.setlist(getDocumentKeyWords())
 
         except :
             print('notWorking')
             return False
-
+       
         # Check if the number of EXISTANTs WIDGET  fit the numers of keywords in the list
         A,B = len(self.WordWidgetList), len(self.wordList.content)
         if A < B : #if not enought, create more :
@@ -536,9 +545,9 @@ class LayerBox():
         #   actualiseButton.setFocusPolicy(ClickFocus)
         newKeyLine.returnPressed.connect(lambda : self.newkeyFromLine(newKeyLine.text()))
         newKeyLine.textChanged.connect(lambda :newKeyLine.setFocus(False) )
+
         self.refreshList()
           
-
     def soloVisible(self,this,wordWidget):
         
         self.offKey.box.setChecked(False)
