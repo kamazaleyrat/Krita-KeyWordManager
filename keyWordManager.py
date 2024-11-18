@@ -103,9 +103,12 @@ class Mot():
         self.isVisible = visible
         self.exportStyle = exportStyle[0]
         self.nodes = list()
+        self.refreshNodes()
 
     def __str__(self):
         return str(self.name)
+    def refreshNodes(self):
+        self.nodes = [node for node in getLayersOf(self.name)]
 
 class WordList():
     def __init__(self,wordsList = list()):
@@ -146,12 +149,13 @@ class WordList():
            print('This word is aleady in the list')
 
         this = self.content[-1]
-        this.nodes = [node for node in getLayersOf(this.name)]
+        this.refreshNodes()
         return this
 
     def setlist(self,thisList):
         print('seting List')
         #infoBox('setup to 0')
+        
         for word in thisList :
                 self.addWord(word)
         return True
@@ -169,13 +173,13 @@ class keyWordWidget() :
         self.parent.refreshList()
 
     def refresh(self):
-        self.mot.isVisible = self.box.isChecked() 
+        self.mot.isVisible = self.box.isChecked()
         self.nameLabel.setText(self.mot.name)
         self.editLine.setText(self.mot.name)
 
-    def setWord(self,mot,*nodes):
+    def setWord(self,mot):
         self.mot = mot
-        self.mot.nodes.extend(nodes)
+        self.mot.refreshNodes()
         self.refresh()
 
     def addWordToNode(self): #ajouter le mot clef aux calques selectionnés
@@ -197,7 +201,7 @@ class keyWordWidget() :
                 node.setName(name) #enlever le mot clef aux calques selectionnés
             if node in self.mot.nodes :
                 self.mot.nodes.remove(node)
-
+        #self.parent.wordList.content.remove(self.mot)
         self.parent.refreshList()
    
     def toggleVisible(self): #rend visible ou invisible les calques avec le mot clef selon l'etat de la checkBox
@@ -483,15 +487,24 @@ class LayerBox():
         except :
             print('not setting list now')
             pass
+        
+        notSetKeyWord = [words for words in self.wordList.content if self.getWidgetOf(words)== False]
 
-        for word in self.wordList.content :
-            thisWidget = self.getWidgetOf(word,self.WordWidgetList)
-            if not thisWidget and word.name is not OFFWORD:
-                self.addKeyWordWidget(word)
+        for word in notSetKeyWord :
+            self.addKeyWordWidget(word)
 
-            elif thisWidget and thisWidget.widget.isVisible == False :
-                thisWidget.widget.setVisible(True)
-            else : continue
+        for widget in self.WordWidgetList :
+            if widget.mot in self.wordList.content : 
+                widget.widget.setVisible(True)
+
+            elif widget.mot not in self.wordList.content and notSetKeyWord:
+                 widget.setWord(notSetKeyWord[0])
+                 notSetKeyWord.pop(0)
+
+            elif widget.mot not in self.wordList.content and not notSetKeyWord :
+                widget.widget.setVisible(False)
+            
+
         if view :
             self.refreshView()
 
