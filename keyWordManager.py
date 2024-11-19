@@ -155,7 +155,7 @@ class WordList():
     def setlist(self,thisList):
         print('seting List')
         #infoBox('setup to 0')
-        
+        self.content.clear()
         for word in thisList :
                 self.addWord(word)
         return True
@@ -206,6 +206,7 @@ class keyWordWidget() :
    
     def toggleVisible(self): #rend visible ou invisible les calques avec le mot clef selon l'etat de la checkBox
         #infoBox('toggled')
+        self.mot.isVisible = self.box.isChecked()
         for layer in self.mot.nodes :
             #infoBox(self.mot.nodes[0])
             layer.setVisible(self.mot.isVisible)
@@ -226,9 +227,8 @@ class keyWordWidget() :
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(5,0,5,0)
 
-        #self.radio = QRadioButton(self.parent.ListWidget)
-        self.box = QCheckBox()
-        
+        self.radio = QRadioButton(parent = self.parent.mainWidget)
+        self.box = QCheckBox()    
         self.box.setChecked(True)
         self.editLine = QLineEdit()
         self.editLine.setText(self.mot.name)
@@ -241,7 +241,7 @@ class keyWordWidget() :
 
 
         #ajout des widget
-        
+        self.layout.addWidget(self.radio) 
         self.layout.addWidget(self.box)
         self.layout.addWidget(self.editLine)
         self.layout.addWidget(self.addButton)
@@ -249,6 +249,7 @@ class keyWordWidget() :
         self.widget.setLayout(self.layout)
 
         #buttons connection
+        self.radio.clicked.connect(lambda : self.parent.soloVisible(self.radio,self))
         #self.box.toggled.connect(self.mot.isVisible = self.box.isChecked() )
         self.box.clicked.connect(lambda : self.parent.refreshView())
         self.box.toggled.connect(lambda : self.refresh())
@@ -280,7 +281,8 @@ class HardWordWidget(keyWordWidget) : #keyWordWidget who can't be modified = jls
         keyWordWidget.__init__(self,mot,parent)
         super().__init__(mot,parent)
         self.box.setText(self.mot.name)
-        self.editLine.hide()
+        self.editLine.setVisible(False)
+        self.radio.setVisible(False)
         self.box.toggled.connect(lambda : self.toggleVisible())
 
 class ExportWidget() :
@@ -481,36 +483,40 @@ class LayerBox():
     
     def refreshList(self, view = False) :
 
-        
         try : self.wordList.setlist(getDocumentKeyWords())
         
         except :
             print('not setting list now')
-            pass
+            return False
         
-        notSetKeyWord = [words for words in self.wordList.content if self.getWidgetOf(words)== False]
-
-        for word in notSetKeyWord :
-            self.addKeyWordWidget(word)
-
-        for widget in self.WordWidgetList :
-            if widget.mot in self.wordList.content : 
-                widget.widget.setVisible(True)
-
-            elif widget.mot not in self.wordList.content and notSetKeyWord:
-                 widget.setWord(notSetKeyWord[0])
-                 notSetKeyWord.pop(0)
-
-            elif widget.mot not in self.wordList.content and not notSetKeyWord :
-                widget.widget.setVisible(False)
+        A = len(self.wordList.content)
+        B = len(self.WordWidgetList)
+        widgetWords = self.getWidgetsWords(self.WordWidgetList)
             
+        for word in self.wordList.content : 
+            word.nodes = getLayersOf(word.name)
+            if word.name == OFFWORD : continue
+            
+            elif word not in widgetWords and A>B:
+                self.addKeyWordWidget(word)
+            
+            elif word not in widgetWords and A<=B:
+                thisWidget = self.getWidgetOf(word,wordIn = False)[0]
+                thisWidget.setWord(word)
+                thisWidget.widget.setVisible(True)
+            
+            else :
+                thisWidget = self.getWidgetOf(word)[0]
+                thisWidget.widget.setVisible(True)
 
+        
+      #  for widget in self.getWidgetOf(*self.wordList.content,wordIn = False):
+       #     widget.widget.setVisible(False)
+            
+            
         if view :
             self.refreshView()
 
-        #liste des mots dans la liste
-        #liste des mots des widget
-        #
                 
     def old_refreshList(self,view = False):
         #infoBox('refreshing')
@@ -552,7 +558,7 @@ class LayerBox():
 
         return True
     
-    def getWidgetsWords(self, widgetList) :
+    def getWidgetsWords(self, widgetList ) :
         widgetsWords = list() 
         for widget in widgetList :
             widgetsWords.append(widget.mot)
@@ -564,12 +570,17 @@ class LayerBox():
         for widget in self.WordWidgetList :
             if widget.mot in words and widget not in thosesWidgets:
                 thosesWidgets.append(widget)
-            else : restWidgets.append(widget)
+            else : 
+                
+                restWidgets.append(widget)
 
-        if not thosesWidgets :
+        
+        if not thosesWidgets and wordIn == True :
             return False 
+        
         elif wordIn == False : return restWidgets
-        else : return thosesWidgets
+        
+        elif wordIn == True : return thosesWidgets
 
     def __init__(self):
        
@@ -624,6 +635,7 @@ class LayerBox():
             for widget in self.WordWidgetList :
                     widget.mot.isVisible = False
                     widget.box.setChecked(False)
+                    widget.radio.setDown(False)
             wordWidget.box.setChecked(True)
             wordWidget.mot.isVisible = True
        
@@ -637,18 +649,11 @@ class LayerBox():
     
         self.refreshList()
         return True
-
+    
     def addKeyWordWidget(self,keyWord):
-        thisLayout = QHBoxLayout()
         self.WordWidgetList.append(keyWordWidget(keyWord,self))
         thisWidget = self.WordWidgetList[-1]
-        radio = QRadioButton()
-        thisLayout.addWidget(radio)
-        thisLayout.addWidget(thisWidget.widget)
-        radio.setParent(thisLayout.itemAt(1).widget())
-        radio.clicked.connect(lambda : self.soloVisible(radio,thisWidget))
-        self.ListLayout.addLayout(thisLayout)
-        #self.refreshList()
+        self.ListLayout.addWidget(thisWidget.widget)
         return thisWidget
    
 class KeyWordDocker(DockWidget):
