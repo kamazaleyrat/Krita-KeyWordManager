@@ -283,7 +283,9 @@ class HardWordWidget(keyWordWidget) : #keyWordWidget who can't be modified = jls
         self.box.setText(self.mot.name)
         self.editLine.setVisible(False)
         self.radio.setVisible(False)
-        self.box.toggled.connect(lambda : self.toggleVisible())
+        self.box.clicked.connect(lambda : self.parent.refreshView())
+        self.box.toggled.connect(lambda : self.refresh())
+        
 
 class ExportWidget() :
 
