@@ -18,7 +18,7 @@ OFFWORD = 'off'
 docKeyWordList = [] #liste des mots clefs du document
 doc = Krita.instance().activeDocument() #ID document
 exportStyle = ('iterate','hide','full','moreIterate')
-EXPORT_FOLDER  = str(os.path.dirname(doc.fileName())+"\\export\\")
+EXPORT_FOLDER  = str(os.path.dirname(doc.fileName())+"/export/")
 
 def infoBox(*message):
         infoBox = QMessageBox()
@@ -285,7 +285,6 @@ class HardWordWidget(keyWordWidget) : #keyWordWidget who can't be modified = jls
         self.radio.setVisible(False)
         self.box.clicked.connect(lambda : self.parent.refreshView())
         self.box.toggled.connect(lambda : self.refresh())
-        
 
 class ExportWidget() :
 
@@ -296,7 +295,7 @@ class ExportWidget() :
         else : 
             self.mot.exportStyle = exportStyle[0]
         self.setExportIcon()
-
+        
     def setExportIcon(self):
         
         if self.mot.exportStyle == exportStyle[0] : 
