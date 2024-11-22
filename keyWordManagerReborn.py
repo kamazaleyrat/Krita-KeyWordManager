@@ -26,7 +26,8 @@ def infoBox(*message):
         infoBox.setWindowTitle('info : ')
         thisText=str()
         if type(message) is list :
-            thisText.join(mot)
+            for mot in message :
+                thisText.join(mot)
         else : thisText += str(message)
         infoBox.setText(thisText)
         infoBox.exec_()
@@ -79,9 +80,12 @@ def exportToPNG(path):
 
 class KeyWord() :
     
+    listOfWords = [] #the list is sheared by all KeyWords
+    
     def __init__(self,word):
         self.word = word
-        self.relatedNodes = []        
+        self.relatedNodes = []
+        self.listOfWords.append(self)      
         # widgets :
         self.widget = QWidget()
         self.solo = QRadioButton()
@@ -108,12 +112,12 @@ class KeyWord() :
         #buttons Effect
         
         self.solo.clicked.connect(lambda : self.soloVisible())
-        self.visible.toggled.connect(lambda : self.toogleVisibility())
+        self.visible.toggled.connect(lambda : self.setVisibility())
         self.writeButton.clicked.connect(lambda : self.addWordToNode())
         self.eraseButton.clicked.connect(lambda : self.rmWordFromNode())
         self.edit.returnPressed.connect(lambda : self.changeWord(self.edit.text())) #initialisation des objet KeyWord
-        self.refresh()
-        
+        self.refreshLabel()
+                
     def getNodes(self) :
         global doc
         nodeList=[]
@@ -123,18 +127,44 @@ class KeyWord() :
         self.relatedNodes = nodeList  
         return nodeList
     
-    def refresh(self):
+    def refreshLabel(self):
         self.edit.setText(self.word)
         for node in self.getNodes() :
             if node.visible() == True:
                 self.visible.setChecked(True)
-  
-    def toogleVisibility(self):
+    
+    def setVisibility(self,visible, refresh = True, force = False):
+       
+        if not visible :
+            visible = self.visible.isChecked()  # by default take the value of the visible checkBox
+        else :
+            self.visible.setChecked(visible)
+        
+        nodesToSet = [node for node in self.relatedNodes if node not in self.shared()]
+        wordsToCheck = [word for word in self.shared('keyWord') if word.visible.isChecked == visible]
+                
+            
         for node in self.relatedNodes:
-            node.setVisible(self.visible.isChecked())
-        doc.refreshProjection()
-        doc.setModified(True)
-  
+            node.setVisible(visible)
+            
+        if refresh == True :   #refresh view by default
+            doc.refreshProjection()
+            doc.setModified(True)
+    
+    def shared(self, value = 'node'):
+        if value =='node' :
+            communNodes = []
+            for word in self.listOfWords :
+                thisList = [node for node in self.relatedNodes if node in word.relatedNodes]
+                communNodes.extend(thisList)
+            return communNodes
+        elif value =='keyWord' :
+            keyWords = []
+            for word in self.listOfWords :
+                if self.shared('node'):
+                    keyWords.append(word)
+            return keyWords
+                           
     def changeWord(self,newWord):
         for node in self.relatedNodes :
             node.setName(node.name().replace(self.word,newWord))
@@ -142,7 +172,7 @@ class KeyWord() :
     
     def setNew(self,newWord) :
         self.word = newWord
-        self.refresh()     
+        self.refreshLabel()     
     
     def addWordToNode(self):
         for node in getSelectedNodes():
@@ -155,11 +185,19 @@ class KeyWord() :
             if node in self.relatedNodes :
                 node.setName(node.name().replace(f"{SEPARATOR}{self.word}",''))
                 self.relatedNodes.pop(node)    
+    
+    def soloVisible(self):
+        for keyword in self.listOfWords :
+            if keyword is not self :
+                keyword.setVisibility(False,False)
+        self.setVisibility(True)
         
+
 class KeyWordDocker(DockWidget):
+   
     def __init__(self) :
         super().__init__()
-        
+       
         self.Window = QDialog(self)
         
         self.setWidget(self.Window)
@@ -170,11 +208,12 @@ class KeyWordDocker(DockWidget):
         self.listLayout = QVBoxLayout()
         
         for word in getDocumentKeyWords():
-            self.listLayout.addWidget(KeyWord(word).widget)
+            self.keyWordList.append(KeyWord(word))
             
         self.Layout.addLayout(self.listLayout)
         
         self.Window.show()
+
     def canvasChanged(self, canvas):
         pass
 
