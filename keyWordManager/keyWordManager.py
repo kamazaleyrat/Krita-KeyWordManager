@@ -397,12 +397,15 @@ class KeyWordDocker(DockWidget):
 
     def __init__(self) :
         super().__init__()
-       
-        self.Window = QDialog(self)
-        self.setWidget(self.Window)
+        
+         
+        
         self.setWindowTitle(DOCKER_NAME)
+        mainWidget = QWidget(self)
+        self.setWidget(mainWidget)  
+        
         self.Layout = QVBoxLayout()
-        self.Window.setLayout(self.Layout)
+        mainWidget.setLayout(self.Layout)
 
         self.listLayout = QVBoxLayout()
         
@@ -450,4 +453,3 @@ class KeyWordDocker(DockWidget):
     def canvasChanged(self, canvas):
         pass
     
-test = KeyWordDocker()

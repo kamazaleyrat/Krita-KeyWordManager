@@ -626,7 +626,6 @@ class LayerBox():
 
         self.refreshList()
         
-
     def soloVisible(self,this,wordWidget):
         
         self.offKey.box.setChecked(False)
