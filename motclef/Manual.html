@@ -27,15 +27,68 @@
     <i> Actuellement, le boutons <bo>"Rafraichir"</bo> est necessaire pour mettre à jour la liste des mots si vous en rajoutez à la main ou si vous changez de documents (Work in progress)</i>
  
 
- <h4>la Liste</h4>
+ <h4>Le Gestionnaire</h4>
  <p>
-
+   dans le panneau, chaque mot clef possède plusieurs actions : 
+   <ul>
+      <li>
+         un radio bouton <i>solo</i> qui masque tous les calques utilisant d'autres mots clef, laissant uniquement celui ci visible
+      </li>
+      <li>
+         une checkBox pour afficher ou masquer les calques associés à ce mot clef
+      </li>
+      <li>
+         le mot clef en lui même. il est possible de le modifier directement dans la boite texte. Dans ce cas là, toute les occurance du mot seront modifiées aussi. <br>
+         <i>si vous changez manuellement le mot clef d'un calque, il sera considéré comme un nouveaux mot clef une fois la liste rafraichit.</i>
+      </li>
+      <li>
+         le bouton "Ecrire" rajoutera le mot clef à <bo>tous les calques séléctionnés</bo>
+      </li>
+      <li>
+         le bouton "Effacer" effecera le mot celf de <bo>tous les calques séléctionnés</bo>. <br> si plus aucun calque ne possède ce mot clef, il serra retiré de la liste
+      </li>
+   </ul>
 
  </p>
+<P>
+   <h5>Le mot <i>OFF</i></h5>
+   <p>Le mot clef <q>/off</q> est un cas particulier pour les calques que vous ne voulez pas rendre visible lors de l'export <br>
+      <em>les calques <q>/off</q> seront automatiquement masqué lors de l'exportation</em>
+      dans le gestionnaire, le mot <q>off</q> ne peut pas être modifié, et sera toujours présent dans la liste.<br>
+      Il peut être visible, ajouté ou retiré avec les boutons comme les autres mots clef mais ne possède pas de bouton <q>solo</q>
+   </p>
+</P>
 
+<h3>L'exportation</h3>
+<p>Le bouton <q>Exporter</q> active une nouvelle fenêtre <br> La liste de mots clef présent dans le document apparaît à nouveaux avec un seul bouton : ce sont les option d'itération du mot clef</p>
+<em>Les options d'exportations ne concernent que les calques liés à des mots clefs. les calques ne comportant pas de mot clef seront soit visible, soit laissés en l'état au moment de l'export (voir <q>sho all other layer</q>plus bas </em>
+<ul>
+<li>
+   <ol> 
+      <li>
+         <i>Normal : </i> exporte une version où seule les calques liés à ce mot clef seront visibles (les autres mots clef seront masqués)
+      </li>
+      
+      <li>
+         <i>Hide : </i> Les claques lié à ce mot clés seront toujours masqués, pas d'itération de ce mot clef
+      </li>
 
- 
+      
+      <li>
+         <i>Show : </i> Les claques lié à ce mot clés seront toujours visibles, pas d'itération de ce mot clef
+      </li>
 
-
+      
+      <li>
+         <i>More Iteration : </i> Pour chaque itération<q>Normale</q>, une version supplémentaire avec ce mot clef sera exporté. <br>
+      </li>
+      
+   </ol>
+</li>
+   <h5>Show all other layers</h5>
+   <p> l'option force tous les autre calques (sans mots clef) à être affichés</p>
+   <h5>Export Folder</h5>
+   <p>de base, le chemin proposé est celui du document plus /export/ <br> il est possible de changer le dossier avec le bouton <q>dossier</q></p> 
+</ul>
 </body>
 </html>

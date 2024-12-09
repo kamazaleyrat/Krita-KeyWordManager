@@ -499,3 +499,4 @@ dock_widget_factory = DockWidgetFactory(DOCKER_ID,
                                         Motclef)
 
 instance.addDockWidgetFactory(dock_widget_factory)
+MotClef.show()
