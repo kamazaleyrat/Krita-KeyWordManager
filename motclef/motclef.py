@@ -443,7 +443,6 @@ class Motclef(DockWidget):
         self.Layout.addLayout(self.groupList)
         
 
-
         # create the new word Line :
         self.newWordLayout = QHBoxLayout()
         self.newWord = QLineEdit("new Words, separate, by comas")
@@ -471,6 +470,18 @@ class Motclef(DockWidget):
         self.exportButton = QPushButton("Export")
         self.Layout.addWidget(self.exportButton)
         self.exportButton.clicked.connect(lambda : ExportBox().window.show())
+
+         #listener for changing
+        
+        appNotifier  = Krita.instance().notifier()
+        appNotifier.setActive(True)
+        appNotifier.imageCreated.connect(self.refreshList)
+    
+
+    
+    def setListener(self) : 
+        self.mainWindow = Krita.instance().activeWindow()
+        self.mainWindow.activeViewChanged.connect(self.refreshList)
         
     def refreshList(self) :
 
@@ -492,7 +503,6 @@ class Motclef(DockWidget):
         return True
     
     def canvasChanged(self, canvas):
-        
         pass
 
 instance = Krita.instance()

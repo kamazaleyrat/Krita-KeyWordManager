@@ -24,6 +24,9 @@ def viewClosedEvent(closedView):
 def viewOpenedEvent(openedView):
     newLabel.setText('view opened')
     print(openedView);
-
+def changeDoc():
+        newLabel.setText('Doc changed')
 appNotifier.viewClosed.connect(viewClosedEvent)
 appNotifier.viewCreated.connect(viewOpenedEvent)
+mainWindow = Krita.instance().activeWindow()
+mainWindow.activeViewChanged.connect(changeDoc)
