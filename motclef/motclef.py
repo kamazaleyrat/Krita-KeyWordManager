@@ -257,7 +257,9 @@ class ExportWidget(KeyWord) :
 
     def setVisibility(self,visible):
         for node in self.relatedNodes:
-            node.setVisible(visible)
+            if str(SEPARATOR+OFFWORD) not in node.name():
+                node.setVisible(visible)
+            else : node.setVisible(False)
    
     def soloVisible(self):
         for keyword in self.listOfWords :
