@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=Krita/PythonPlugin
+X-KDE-Library=keyWordManager
+X-Python-2-Compatible=false
+X-Krita-Manual=Manual.html
+Name=keyWordManager
+Comment=Manage your export an layer by key-Words
